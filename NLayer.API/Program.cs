@@ -1,3 +1,11 @@
+using Microsoft.EntityFrameworkCore;
+using NLayer.Core.Repositories;
+using NLayer.Core.Services;
+using NLayer.Repository;
+using NLayer.Repository.Repositories;
+using NLayer.Repository.UnitOfWork;
+using System.Reflection;
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
@@ -6,6 +14,20 @@ builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+
+builder.Services.AddScoped<UnitOfWork, UnitOfWork>();
+builder.Services.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepository<>));
+//builder.Services.AddScoped(typeof(IService<>), typeof(Service<>));
+
+builder.Services.AddDbContext<AppDbContext>(x =>
+{
+    //SQL Server kullanacaðýný belirttik.
+    //AppDbContext'in API deðil Repository Assembley'sinde olduðunu belirttik.
+    x.UseSqlServer(builder.Configuration.GetConnectionString("SqlConnection"), option =>
+      {
+          option.MigrationsAssembly(Assembly.GetAssembly(typeof(AppDbContext)).GetName().Name);
+      });
+});
 
 var app = builder.Build();
 
